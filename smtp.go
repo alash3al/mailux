@@ -3,34 +3,23 @@ package main
 import (
 	"errors"
 	"log"
-	"net"
 	"strings"
 	"time"
 
-	"github.com/alash3al/go-mailbox"
+	"github.com/alash3al/go-smtpsrv"
 	"github.com/zaccone/spf"
 )
 
 func initSMTP() {
-	smtp.HandleFunc("*@"+*flagDomain, func(req *smtp.Envelope) error {
-		ipAddr, _, err := net.SplitHostPort(req.RemoteAddr)
-		if err != nil {
-			return err
-		}
-
-		fromEmail, toEmail := req.MessageFrom, req.MessageTo
+	handler := func(req *smtpsrv.Request) error {
+		fromEmail, toEmail := req.From, req.To
 		fromEmail = strings.ToLower(fromEmail)
-		_, fromDomain, err := smtp.SplitAddress(fromEmail)
-		if err != nil {
-			return err
-		}
 
-		res, _, err := spf.CheckHost(net.ParseIP(ipAddr), fromDomain, fromEmail)
-		if (err != nil || res != spf.Pass) && *flagSPFChecker {
+		if spf.Pass != req.SPFResult && *flagSPFChecker {
 			return errors.New("ERR_CHEATING_DETECTED")
 		}
 
-		inbox := strings.Split(toEmail, "@")[0]
+		inbox := strings.Split(toEmail[0], "@")[0]
 		expires, _ := redisClient.Get(redisKeyPrefix(inbox + ":expires")).Int64()
 		if time.Now().Unix() >= expires {
 			return errors.New("ERR_EXPIRED")
@@ -46,7 +35,13 @@ func initSMTP() {
 		}
 
 		return nil
-	})
+	}
 
-	log.Fatal(smtp.ListenAndServe(*flagSMTPAddr, nil))
+	srv := &smtpsrv.Server{
+		Addr:        *flagSMTPAddr,
+		MaxBodySize: 1024 * 1024, // 1 MB
+		Handler:     handler,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }
