@@ -9,6 +9,11 @@ Flow
 - You hit the `/mailbox/info/<mailboxID>` each X of time (from the browser).
 - if the above step returned that it has been received, just send a request to the backend to hit the above endpoint again just as a confirmation, after that you respond to the browser with a `token/session`.
 
+Installation
+============
+- `go get github.com/alash3al/mailux`
+- or by downloading the binary from [here](https://github.com/alash3al/mailux/releases)
+
 Help
 ====
 ```bash
