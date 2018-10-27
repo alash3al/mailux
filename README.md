@@ -12,7 +12,7 @@ Flow
 Installation
 ============
 - `go get github.com/alash3al/mailux`
-- or `wget -O mailux https://raw.githubusercontent.com/alash3al/mailux/master/godownloader.sh`
+- or `wget -O mailux https://raw.githubusercontent.com/alash3al/mailux/master/download.sh`
 - or by downloading the binary from [here](https://github.com/alash3al/mailux/releases)
 
 Help
